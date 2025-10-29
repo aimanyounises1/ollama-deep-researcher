@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VFIT Deep Research - Enterprise AI Research Assistant powered by Qwen3">
+    <meta name="theme-color" content="#202123">
+    <title>VFIT Deep Research</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs2015.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // ChatGPT-like color scheme
+                        'chatgpt': {
+                            bg: '#343541',           // Main chat area background
+                            sidebar: '#202123',       // Sidebar background
+                            navbg: '#343541',         // Nav background
+                            usermsg: '#444654',       // User message background
+                            border: '#565869',        // Border color
+                            hovergray: '#2A2B32',     // Hover state for items
+                            primary: '#10A37F',       // Primary/brand color (green)
+                            primaryhover: '#1A7F64',  // Primary color hover state
+                            text: '#ECECF1',          // Main text color
+                            subtext: '#8E8EA0',       // Secondary text color
+                            icon: '#ECECF1',          // Icon color
+                        },
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #343541;
+            color: #ECECF1;
+            font-family: 'Inter', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(217, 217, 227, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(217, 217, 227, 0.3);
+        }
+
+        .typing-indicator span {
+            animation: typing 1.4s ease-in-out infinite;
+            animation-delay: calc(0.2s * var(--dot-index));
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: #8E8EA0;
+            display: inline-block;
+            margin-right: 2px;
+        }
+
+        @keyframes typing {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        .prose {
+            color: #ECECF1;
+            line-height: 1.6;
+        }
+
+        .prose pre {
+            background-color: #2C2C3A;
+            border-radius: 0.5rem;
+            margin: 1em 0;
+            overflow-x: auto;
+        }
+
+        .prose code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+
+        .prose a {
+            color: #10A37F;
+            text-decoration: none;
+        }
+
+        .prose a:hover {
+            text-decoration: underline;
+        }
+
+        /* For mobile sidebar */
+        @media (max-width: 768px) {
+            .sidebar-container {
+                position: fixed;
+                z-index: 50;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .sidebar-container.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 49;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+    <!-- Mobile Navigation Bar - Only visible on mobile -->
+    <nav class="md:hidden bg-chatgpt-sidebar border-b border-chatgpt-border h-12 flex items-center justify-between px-4">
+        <button id="mobile-menu-button" class="text-chatgpt-icon hover:text-white p-2 rounded">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        <span class="text-chatgpt-text font-semibold">VFIT Deep Research</span>
+        <button id="mobile-new-chat" class="text-chatgpt-icon p-2 rounded hover:text-white">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+            </svg>
+        </button>
+    </nav>
+
+    <!-- Main Container - Sidebar & Chat Area -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar Overlay (Mobile Only) -->
+        <div id="sidebar-overlay" class="sidebar-overlay md:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar-container md:relative md:translate-x-0 bg-chatgpt-sidebar w-64 flex flex-col h-full overflow-y-auto border-r border-chatgpt-border">
+            <!-- New Chat Button -->
+            <div class="p-2">
+                <button id="new-chat-btn" class="flex items-center w-full gap-3 rounded-md px-3 py-2.5 text-sm bg-chatgpt-primary hover:bg-chatgpt-primaryhover text-white justify-center font-medium transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                        <path d="M12 4V20M4 12H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    New chat
+                </button>
+            </div>
+
+            <!-- Conversations List -->
+            <div class="px-2 pt-2 pb-2 flex-1 overflow-y-auto">
+                <h2 class="text-xs text-chatgpt-subtext font-medium px-2 py-1.5">Recent conversations</h2>
+                <div id="conversations-list" class="flex flex-col gap-1 mt-1">
+                    <!-- Active conversation example -->
+                    <div class="conversation-item flex py-2 px-3 items-center gap-3 relative rounded-md hover:bg-chatgpt-hovergray cursor-pointer break-all bg-chatgpt-hovergray pr-14 text-chatgpt-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-chatgpt-subtext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <div class="flex-1 text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">Previous Research</div>
+                        <div class="absolute right-2 flex">
+                            <button class="p-1 hover:text-white text-chatgpt-subtext">
+                                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Other conversation example -->
+                    <div class="conversation-item flex py-2 px-3 items-center gap-3 relative rounded-md hover:bg-chatgpt-hovergray cursor-pointer break-all pr-14 text-chatgpt-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-chatgpt-subtext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <div class="flex-1 text-sm overflow-hidden text-ellipsis whitespace-nowrap">MTV1797 Analysis</div>
+                        <div class="absolute right-2 flex">
+                            <button class="p-1 hover:text-white text-chatgpt-subtext">
+                                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Another conversation example -->
+                    <div class="conversation-item flex py-2 px-3 items-center gap-3 relative rounded-md hover:bg-chatgpt-hovergray cursor-pointer break-all pr-14 text-chatgpt-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-chatgpt-subtext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <div class="flex-1 text-sm overflow-hidden text-ellipsis whitespace-nowrap">VIT-123 Investigation</div>
+                        <div class="absolute right-2 flex">
+                            <button class="p-1 hover:text-white text-chatgpt-subtext">
+                                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer -->
+            <div class="border-t border-chatgpt-border px-2 pt-2 pb-2">
+                <div id="connection-status" class="flex items-center py-2 px-3 gap-3 rounded-md hover:bg-chatgpt-hovergray cursor-pointer text-chatgpt-text text-sm">
+                    <div class="w-2 h-2 bg-chatgpt-primary rounded-full animate-pulse"></div>
+                    <span>Connected to API</span>
+                </div>
+                <div class="flex items-center py-2 px-3 gap-3 rounded-md hover:bg-chatgpt-hovergray cursor-pointer text-chatgpt-text text-sm">
+                    <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Settings</span>
+                </div>
+                <div class="flex items-center py-2 px-3 gap-3 rounded-md hover:bg-chatgpt-hovergray cursor-pointer text-chatgpt-text text-sm">
+                    <span class="text-xs text-chatgpt-subtext">Running Qwen3 30B</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col overflow-hidden bg-chatgpt-bg relative">
+            <!-- Chat messages will go here -->
+            <div id="messages-container" class="flex-1 overflow-y-auto">
+                <!-- Messages will be added by JavaScript -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-2 md:p-4 border-t border-chatgpt-border relative">
+                <div class="max-w-3xl mx-auto">
+                    <form id="message-form" class="relative">
+                        <textarea 
+                            id="message-input" 
+                            placeholder="Ask a question or use /research or /quiz commands..." 
+                            rows="1" 
+                            class="w-full rounded-lg border border-chatgpt-border bg-chatgpt-navbg py-3 pl-4 pr-12 text-white focus:outline-none focus:border-chatgpt-primary shadow-sm resize-none"
+                            style="max-height: 200px;"
+                        ></textarea>
+                        <button 
+                            id="send-message-btn" 
+                            type="submit" 
+                            class="absolute right-3 bottom-3 enabled:text-chatgpt-primary enabled:hover:text-chatgpt-primaryhover disabled:text-gray-500 disabled:cursor-not-allowed"
+                            disabled
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </form>
+                    <div class="flex justify-center mt-2 space-x-2">
+                        <button class="px-2.5 py-1 text-xs bg-chatgpt-hovergray hover:bg-[#3F3F4E] text-chatgpt-text rounded-md transition-colors">/research</button>
+                        <button class="px-2.5 py-1 text-xs bg-chatgpt-hovergray hover:bg-[#3F3F4E] text-chatgpt-text rounded-md transition-colors">/quiz</button>
+                        <button class="px-2.5 py-1 text-xs bg-chatgpt-hovergray hover:bg-[#3F3F4E] text-chatgpt-text rounded-md transition-colors">/help</button>
+                    </div>
+                    <div class="text-[10px] text-chatgpt-subtext text-center mt-2">
+                        Model: Qwen3 30B • VFIT Deep Research
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // BASE_URL for API calls - Use current window location
+        const BASE_URL = window.location.origin;
+        
+        // Socket.IO will be initialized here
+        let socket = null;
+        
+        // Store conversations
+        let conversations = [
+            {
+                id: 'default',
+                title: 'New Conversation',
+                messages: []
+            }
+        ];
+        let currentConversationId = 'default';
+        
+        // Initialize UI components
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configure mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            
+            if (mobileMenuButton && sidebar && sidebarOverlay) {
+                mobileMenuButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active');
+                });
+                
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+            
+            // Message input handling
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-message-btn');
+            const messageForm = document.getElementById('message-form');
+            
+            if (messageInput && sendButton && messageForm) {
+                // Enable/disable send button based on input
+                messageInput.addEventListener('input', function() {
+                    // Auto resize the textarea
+                    this.style.height = 'auto';
+                    const newHeight = Math.min(this.scrollHeight, 200);
+                    this.style.height = newHeight + 'px';
+                    
+                    // Enable/disable send button
+                    if (this.value.trim()) {
+                        sendButton.removeAttribute('disabled');
+                    } else {
+                        sendButton.setAttribute('disabled', 'disabled');
+                    }
+                });
+                
+                // Handle form submission
+                messageForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const message = messageInput.value.trim();
+                    if (!message) return;
+                    
+                    // Process message based on commands
+                    processUserMessage(message);
+                    
+                    // Clear input
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                    sendButton.setAttribute('disabled', 'disabled');
+                });
+            }
+            
+            // Command button handlers
+            document.querySelectorAll('button[class*="px-2.5 py-1 text-xs bg-chatgpt-hovergray"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (messageInput) {
+                        messageInput.value = this.textContent + ' ';
+                        messageInput.focus();
+                        // Trigger input event to resize and enable send button
+                        messageInput.dispatchEvent(new Event('input'));
+                    }
+                });
+            });
+            
+            // New chat button handler
+            document.getElementById('new-chat-btn').addEventListener('click', function() {
+                createNewConversation();
+            });
+            
+            document.getElementById('mobile-new-chat').addEventListener('click', function() {
+                createNewConversation();
+                // Close sidebar on mobile
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+            
+            // Initialize Socket.IO connection
+            initSocketConnection();
+            
+            // Initial rendering
+            renderMessages();
+        });
+        
+        // Socket.IO initialization
+        function initSocketConnection() {
+            try {
+                // Use the same origin for Socket.IO
+                socket = io(BASE_URL, {
+                    reconnectionAttempts: 5,
+                    reconnectionDelay: 1000,
+                    timeout: 10000,
+                    transports: ['websocket', 'polling']
+                });
+                
+                socket.on('connect', () => {
+                    console.log('Socket connected');
+                    updateConnectionStatus(true);
+                });
+                
+                socket.on('disconnect', () => {
+                    console.log('Socket disconnected');
+                    updateConnectionStatus(false);
+                });
+                
+                socket.on('error', (error) => {
+                    console.error('Socket error:', error);
+                    updateConnectionStatus(false);
+                });
+                
+                // Status updates during research or quiz process
+                socket.on('status_update', (data) => {
+                    console.log('Status update:', data);
+                    updateStatusMessage(data);
+                });
+                
+                // Research completion
+                socket.on('research_complete', (data) => {
+                    console.log('Research complete:', data);
+                    addMessage('assistant', `## Research Complete\n\n${data.summary || 'Research completed successfully.'}\n\n[View full results](${BASE_URL}/outputs/${data.result_file.split('/').pop()})`);
+                });
+                
+                // Research error
+                socket.on('research_error', (data) => {
+                    console.error('Research error:', data);
+                    addMessage('assistant', `**Error:** ${data.error}\n\n${data.traceback || ''}`, true);
+                });
+                
+                // Quiz completion
+                socket.on('quiz_complete', (data) => {
+                    console.log('Quiz complete:', data);
+                    let answersText = '## Quiz Answers\n\n';
+                    
+                    if (Array.isArray(data.answers)) {
+                        data.answers.forEach((answer, index) => {
+                            answersText += `### Question ${index + 1}\n\n${answer.question || 'N/A'}\n\n**Answer:** ${answer.answer || 'No answer provided'}\n\n`;
+                            
+                            if (answer.explanation) {
+                                answersText += `**Explanation:** ${answer.explanation}\n\n`;
+                            }
+                            
+                            if (answer.confidence) {
+                                answersText += `**Confidence:** ${answer.confidence}\n\n`;
+                            }
+                            
+                            if (answer.sources && answer.sources.length > 0) {
+                                answersText += `**Sources:**\n\n`;
+                                answer.sources.forEach(source => {
+                                    answersText += `- ${source}\n`;
+                                });
+                                answersText += '\n';
+                            }
+                        });
+                    } else {
+                        answersText += 'No answers provided.';
+                    }
+                    
+                    addMessage('assistant', answersText);
+                });
+                
+                // Quiz error
+                socket.on('quiz_error', (data) => {
+                    console.error('Quiz error:', data);
+                    addMessage('assistant', `**Error:** ${data.error}\n\n${data.traceback || ''}`, true);
+                });
+                
+                console.log('Socket.IO initialized');
+            } catch (error) {
+                console.error('Failed to initialize Socket.IO:', error);
+                updateConnectionStatus(false);
+            }
+        }
+        
+        // Update connection status indicator
+        function updateConnectionStatus(isConnected) {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                const statusDot = statusElement.querySelector('div');
+                const statusText = statusElement.querySelector('span');
+                
+                if (isConnected) {
+                    statusDot.classList.remove('bg-red-500');
+                    statusDot.classList.add('bg-chatgpt-primary');
+                    statusText.textContent = 'Connected to API';
+                } else {
+                    statusDot.classList.remove('bg-chatgpt-primary');
+                    statusDot.classList.add('bg-red-500');
+                    statusText.textContent = 'Disconnected';
+                }
+            }
+        }
+        
+        // Process user message
+        function processUserMessage(message) {
+            // Add user message to UI
+            addMessage('user', message);
+            
+            // Handle commands
+            if (message.startsWith('/research')) {
+                const topic = message.replace('/research', '').trim();
+                if (topic) {
+                    startResearch(topic);
+                } else {
+                    addMessage('assistant', 'Please provide a research topic. Usage: `/research [topic]`');
+                }
+            } else if (message.startsWith('/quiz')) {
+                const quizText = message.replace('/quiz', '').trim();
+                if (quizText) {
+                    startQuiz(quizText);
+                } else {
+                    addMessage('assistant', 'Please provide quiz questions. Usage: `/quiz [questions]`');
+                }
+            } else if (message.startsWith('/help')) {
+                showHelp();
+            } else {
+                // Regular message - respond with help info for now
+                addMessage('assistant', 'I am an AI research assistant. Use the following commands:\n\n- `/research [topic]` - Start a deep research on a topic\n- `/quiz [questions]` - Answer quiz questions based on the knowledge base\n- `/help` - Show help information');
+            }
+        }
+        
+        // Start research
+        function startResearch(topic) {
+            // Show a typing indicator
+            showTypingIndicator();
+            
+            // Call API
+            fetch(`${BASE_URL}/api/research`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ topic })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Research started:', data);
+                // Initial status message - will be updated by socket events
+                addMessage('assistant', `Starting research on: **${topic}**\n\nThis may take several minutes to complete. Status updates will appear here.`, false, true);
+            })
+            .catch(error => {
+                console.error('Error starting research:', error);
+                removeTypingIndicator();
+                addMessage('assistant', `**Error starting research:** ${error.message}`, true);
+            });
+        }
+        
+        // Start quiz
+        function startQuiz(quizText) {
+            // Show a typing indicator
+            showTypingIndicator();
+            
+            // Call API - Note: backend expects 'quiz_text' parameter
+            fetch(`${BASE_URL}/api/quiz`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quiz_text: quizText })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Quiz started:', data);
+                // Initial status message - will be updated by socket events
+                addMessage('assistant', `Processing quiz questions... This may take a minute.`, false, true);
+            })
+            .catch(error => {
+                console.error('Error starting quiz:', error);
+                removeTypingIndicator();
+                addMessage('assistant', `**Error starting quiz:** ${error.message}`, true);
+            });
+        }
+        
+        // Show help message
+        function showHelp() {
+            const helpText = `
+## VFIT Deep Research Help
+
+Use the following commands to interact with the research assistant:
+
+### Research Command
+\`/research [topic]\` - Start in-depth research on a topic
+- Example: \`/research How do LSTM networks handle long sequences?\`
+
+### Quiz Command
+\`/quiz [questions]\` - Answer quiz questions using the knowledge base
+- Example: \`/quiz What are the key components of a transformer architecture? How does self-attention work?\`
+
+### Notes
+- Research may take several minutes to complete
+- Results include data from enterprise sources
+- For questions, begin with \`/quiz\`
+`;
+            addMessage('assistant', helpText);
+        }
+        
+        // Add message to UI
+        function addMessage(role, content, isError = false, isStatusMessage = false) {
+            const conversation = conversations.find(c => c.id === currentConversationId);
+            if (!conversation) return;
+            
+            // Create message object
+            const newMessage = {
+                id: Date.now(),
+                role,
+                content,
+                isError,
+                isStatusMessage
+            };
+            
+            // Add to conversation
+            if (isStatusMessage) {
+                // Replace existing status message if present
+                const statusIndex = conversation.messages.findIndex(m => m.isStatusMessage);
+                if (statusIndex !== -1) {
+                    conversation.messages[statusIndex] = newMessage;
+                } else {
+                    conversation.messages.push(newMessage);
+                }
+            } else {
+                // Remove typing indicator and status messages when adding new non-status message
+                if (role === 'assistant' || isError) {
+                    conversation.messages = conversation.messages.filter(m => !m.isStatusMessage);
+                }
+                conversation.messages.push(newMessage);
+            }
+            
+            // Update UI
+            renderMessages();
+            
+            // Update sidebar with first message if needed
+            if (conversation.messages.length === 1 && role === 'user') {
+                // Update conversation title based on first message
+                conversation.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+                updateConversationsList();
+            }
+        }
+        
+        // Update status message
+        function updateStatusMessage(statusData) {
+            if (!statusData) return;
+            
+            let statusMessage = '';
+            if (statusData.current_step) {
+                statusMessage = `**Current Step:** ${statusData.current_step}\n`;
+            }
+            if (typeof statusData.progress === 'number') {
+                statusMessage += `**Progress:** ${statusData.progress}%\n\n`;
+            }
+            
+            // Add most recent log messages (last 5)
+            if (statusData.log_messages && statusData.log_messages.length > 0) {
+                statusMessage += `**Recent Log:**\n\n`;
+                const recentLogs = statusData.log_messages.slice(-5);
+                recentLogs.forEach(log => {
+                    statusMessage += `- ${log}\n`;
+                });
+            }
+            
+            addMessage('assistant', statusMessage, false, true);
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('messages-container');
+            if (!messagesContainer) return;
+            
+            // Remove existing typing indicator
+            removeTypingIndicator();
+            
+            // Create typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'message-container flex p-4 md:p-6 w-full typing-indicator';
+            typingIndicator.innerHTML = `
+                <div class="prose max-w-3xl mx-auto w-full">
+                    <div class="flex items-center space-x-1">
+                        <span style="--dot-index: 1"></span>
+                        <span style="--dot-index: 2"></span>
+                        <span style="--dot-index: 3"></span>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(typingIndicator);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator() {
+            const messagesContainer = document.getElementById('messages-container');
+            if (!messagesContainer) return;
+            
+            const typingIndicator = messagesContainer.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        // Render all messages for current conversation
+        function renderMessages() {
+            const messagesContainer = document.getElementById('messages-container');
+            if (!messagesContainer) return;
+            
+            // Find current conversation
+            const conversation = conversations.find(c => c.id === currentConversationId);
+            if (!conversation) return;
+            
+            // Clear existing messages
+            messagesContainer.innerHTML = '';
+            
+            // Add welcome message if no messages
+            if (conversation.messages.length === 0) {
+                renderWelcomeMessage(messagesContainer);
+                return;
+            }
+            
+            // Render each message
+            conversation.messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                
+                if (message.role === 'user') {
+                    messageElement.className = 'message-container flex p-4 md:p-6 w-full bg-chatgpt-usermsg';
+                    messageElement.innerHTML = `
+                        <div class="prose max-w-3xl mx-auto w-full">
+                            <p class="whitespace-pre-wrap">${escapeHtml(message.content)}</p>
+                        </div>
+                    `;
+                } else {
+                    // Assistant message
+                    messageElement.className = `message-container flex p-4 md:p-6 w-full ${message.isError ? 'bg-red-950' : ''}`;
+                    
+                    // Format markdown and handle code blocks
+                    const renderedContent = formatMarkdown(message.content);
+                    
+                    messageElement.innerHTML = `
+                        <div class="prose max-w-3xl mx-auto w-full ${message.isStatusMessage ? 'text-chatgpt-subtext text-sm' : ''}">
+                            ${renderedContent}
+                        </div>
+                    `;
+                }
+                
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // Apply syntax highlighting to code blocks
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Render welcome message
+        function renderWelcomeMessage(container) {
+            const welcomeElement = document.createElement('div');
+            welcomeElement.className = 'h-full flex flex-col items-center justify-center text-center px-4';
+            welcomeElement.innerHTML = `
+                <div class="w-16 h-16 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#10A37F" class="w-full h-full">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h1 class="text-xl md:text-2xl font-semibold text-chatgpt-text mb-2">How can I help you today?</h1>
+                <p class="text-sm md:text-base text-chatgpt-subtext max-w-lg mb-6">
+                    Use commands like <span class="font-mono bg-chatgpt-hovergray px-1.5 py-0.5 rounded">/research</span> to explore topics or <span class="font-mono bg-chatgpt-hovergray px-1.5 py-0.5 rounded">/quiz</span> to get answers to specific questions.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
+                    <div class="bg-chatgpt-hovergray rounded-lg p-4 text-left hover:bg-opacity-70 cursor-pointer transition">
+                        <h3 class="font-medium text-chatgpt-text mb-1">Research a topic</h3>
+                        <p class="text-xs text-chatgpt-subtext">Type <span class="font-mono">/research</span> followed by your topic</p>
+                    </div>
+                    <div class="bg-chatgpt-hovergray rounded-lg p-4 text-left hover:bg-opacity-70 cursor-pointer transition">
+                        <h3 class="font-medium text-chatgpt-text mb-1">Answer quiz questions</h3>
+                        <p class="text-xs text-chatgpt-subtext">Type <span class="font-mono">/quiz</span> followed by your questions</p>
+                    </div>
+                </div>
+            `;
+            container.appendChild(welcomeElement);
+        }
+        
+        // Format markdown content
+        function formatMarkdown(content) {
+            if (!content) return '';
+            
+            // Use marked.js for markdown parsing
+            marked.setOptions({
+                highlight: function(code, lang) {
+                    if (lang && hljs.getLanguage(lang)) {
+                        try {
+                            return hljs.highlight(code, { language: lang }).value;
+                        } catch (e) {
+                            console.error('Error highlighting code:', e);
+                        }
+                    }
+                    return hljs.highlightAuto(code).value;
+                },
+                breaks: true,
+                gfm: true
+            });
+            
+            try {
+                return marked.parse(content);
+            } catch (e) {
+                console.error('Error parsing markdown:', e);
+                
+                // Fallback to basic markdown conversion
+                let html = content;
+                
+                // Basic markdown conversion (simplified)
+                // Headers
+                html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+                html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                
+                // Bold text
+                html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                
+                // Italic text
+                html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                // Links
+                html = html.replace(/\[([^\[]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-chatgpt-primary hover:underline">$1</a>');
+                
+                // Lists
+                html = html.replace(/^\- (.*$)/gm, '<li>$1</li>');
+                html = html.replace(/<\/li>\n<li>/g, '</li><li>');
+                html = html.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+                
+                // Code blocks
+                html = html.replace(/```(?:\w+)?\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                
+                // Inline code
+                html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Paragraphs
+                html = html.replace(/\n\n/g, '</p><p>');
+                html = html.replace(/^([^<].*)/gm, function(m) {
+                    if (m.trim() && !m.startsWith('<')) {
+                        return '<p>' + m + '</p>';
+                    }
+                    return m;
+                });
+                
+                return html;
+            }
+        }
+        
+        // Escape HTML for user content
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+        
+        // Create new conversation
+        function createNewConversation() {
+            const newId = Date.now().toString();
+            conversations.push({
+                id: newId,
+                title: 'New Conversation',
+                messages: []
+            });
+            
+            // Switch to new conversation
+            currentConversationId = newId;
+            
+            // Update UI
+            updateConversationsList();
+            renderMessages();
+        }
+        
+        // Update conversations list in sidebar
+        function updateConversationsList() {
+            const conversationsList = document.getElementById('conversations-list');
+            if (!conversationsList) return;
+            
+            // Clear list
+            conversationsList.innerHTML = '';
+            
+            // Add each conversation
+            conversations.forEach(conversation => {
+                const item = document.createElement('div');
+                item.className = `conversation-item flex py-2 px-3 items-center gap-3 relative rounded-md hover:bg-chatgpt-hovergray cursor-pointer break-all ${conversation.id === currentConversationId ? 'bg-chatgpt-hovergray' : ''} pr-14 text-chatgpt-text`;
+                item.dataset.id = conversation.id;
+                
+                item.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-chatgpt-subtext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <div class="flex-1 text-sm font-medium overflow-hidden text-ellipsis whitespace-nowrap">${conversation.title}</div>
+                    <div class="absolute right-2 flex">
+                        <button class="p-1 hover:text-white text-chatgpt-subtext delete-conversation" data-id="${conversation.id}">
+                            <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                // Add click event to switch conversation
+                item.addEventListener('click', function(e) {
+                    // Don't switch if clicking delete button
+                    if (e.target.closest('.delete-conversation')) return;
+                    
+                    currentConversationId = conversation.id;
+                    updateConversationsList();
+                    renderMessages();
+                });
+                
+                // Add delete button event
+                const deleteBtn = item.querySelector('.delete-conversation');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deleteConversation(conversation.id);
+                    });
+                }
+                
+                conversationsList.appendChild(item);
+            });
+        }
+        
+        // Delete conversation
+        function deleteConversation(id) {
+            const index = conversations.findIndex(c => c.id === id);
+            if (index === -1) return;
+            
+            // Remove conversation
+            conversations.splice(index, 1);
+            
+            // Switch to another conversation if needed
+            if (id === currentConversationId) {
+                if (conversations.length > 0) {
+                    currentConversationId = conversations[0].id;
+                } else {
+                    // Create new conversation if none exist
+                    createNewConversation();
+                    return;
+                }
+            }
+            
+            // Update UI
+            updateConversationsList();
+            renderMessages();
+        }
+    </script>
+</body>
+</html>

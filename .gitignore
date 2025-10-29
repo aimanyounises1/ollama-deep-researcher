@@ -1,0 +1,47 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.bak
+.env.proxy
+
+# Python virtualenv & caches
+.venv*/
+__pycache__/
+*.py[cod]
+*.so
+
+# IDE
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Logs / outputs
+logs/
+perforce_logs/
+outputs/
+run_graph_3.log
+*.log
+
+# Result files
+graph_*_result*.json
+
+# Node / build artifacts
+node_modules/
+frontend/build/
+
+# Packaging
+*.egg-info/
+
+# Images generated
+*.png
+
+# Python & testing caches
+.ruff_cache/
+.pytest_cache/
+
+# Next.js build output
+.next/
+frontend/next-ui/.next/

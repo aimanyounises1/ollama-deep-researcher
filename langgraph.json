@@ -1,0 +1,13 @@
+{
+    "dockerfile_lines": [
+      "RUN pip install --no-cache-dir aiohttp urllib3 requests certifi"
+    ],
+    "graphs": {
+      "open_deep_research": "src/assistant/graph_2.py:graph"
+    },
+    "python_version": "3.11",
+    "env": "./.env",
+    "dependencies": [
+      "."
+    ]
+  }

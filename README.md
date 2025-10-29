@@ -1,0 +1,281 @@
+# Ollama Deep Researcher
+
+A sophisticated web application for deep research using Ollama models and web search. This application provides an intuitive interface for performing comprehensive research on various topics with knowledge graph generation, citation tracking, and semantic analysis.
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8+-green.svg)
+![Node](https://img.shields.io/badge/node-16+-green.svg)
+
+## Features
+
+- **🔍 Deep Web Research**: Perform multi-iteration research with integrated web search capabilities
+- **🕸️ Knowledge Graph Generation**: Automatically build knowledge graphs from research findings
+- **📚 Citation Tracking**: Track and manage sources with proper attribution
+- **⚡ Real-time Progress Tracking**: Monitor research progress step-by-step
+- **🎨 Modern UI**: Beautiful and responsive Next.js user interface
+- **🐳 Production Ready**: Docker containerization for easy deployment
+- **🧠 RAG Support**: Advanced retrieval-augmented generation with semantic deduplication
+- **📊 Vector Store**: FAISS-based vector storage for efficient similarity search
+- **🔄 LangGraph Integration**: State machine-based research workflows
+
+## Architecture
+
+This application uses a sophisticated architecture combining:
+
+- **Backend**: Python Flask API with LangGraph for orchestrating research workflows
+- **Frontend**: React-based web interface with real-time updates
+- **LLM**: Ollama for local language model inference
+- **Search**: Tavily and Perplexity API integration for web research
+- **Storage**: FAISS vector store for semantic search
+- **Orchestration**: LangGraph for managing complex research state machines
+
+## Requirements
+
+- Python 3.8+
+- Node.js 16+
+- Ollama running locally or on a remote server
+- Docker & Docker Compose (for production deployment)
+
+## Quick Start
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/aimanyounises1/ollama-deep-researcher.git
+   cd ollama-deep-researcher
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your API keys
+   ```
+
+3. **Install Python dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Install frontend dependencies**
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+### Configuration
+
+Edit the `.env` file with your settings:
+
+```bash
+# Web Search API Keys
+TAVILY_API_KEY=your_tavily_api_key_here
+PERPLEXITY_API_KEY=your_perplexity_api_key_here
+
+# Ollama Configuration
+OLLAMA_ENDPOINT=http://localhost:11434
+LLM_MODEL=qwen3:30b-a3b
+EMBEDDING_MODEL=nomic-embed-text:latest
+
+# Research Configuration
+OLLAMA_MAX_WEB_RESEARCH_LOOPS=3
+OLLAMA_INCLUDE_WEB_SEARCH=true
+OLLAMA_GENERATE_KNOWLEDGE_GRAPH=true
+OLLAMA_TRACK_CITATIONS=true
+```
+
+### Running Locally
+
+1. **Start Ollama** (if not already running)
+   ```bash
+   ollama serve
+   ```
+
+2. **Start the backend**
+   ```bash
+   python run_graph_3.py --debug "Your research query here"
+   ```
+
+3. **Start the frontend** (in a new terminal)
+   ```bash
+   cd frontend
+   npm start
+   ```
+
+4. **Access the application**
+   Open your browser and navigate to `http://localhost:3000`
+
+## Docker Deployment
+
+For production deployment using Docker:
+
+```bash
+# Build and start all services
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+The application will be available at `http://localhost:5000`
+
+## Usage
+
+### Research Workflow
+
+1. Enter your research query in the interface
+2. The system will:
+   - Analyze your query
+   - Perform web searches using multiple sources
+   - Extract and process relevant information
+   - Build a knowledge graph of relationships
+   - Track citations and sources
+   - Generate a comprehensive research report
+
+### Command Line Interface
+
+You can also use the CLI for research:
+
+```bash
+python run_graph_3.py --debug "How does quantum computing work?"
+```
+
+Options:
+- `--debug`: Enable debug logging
+- `--max-iterations`: Set maximum research iterations (default: 3)
+- `--output`: Specify output file for results
+
+## Project Structure
+
+```
+ollama-deep-researcher/
+├── src/
+│   ├── assistant/         # Core research logic
+│   │   ├── graph_3.py    # Main LangGraph workflow
+│   │   ├── research/     # Research modules
+│   │   ├── rag/          # RAG implementations
+│   │   ├── tools/        # Integration tools
+│   │   └── verifiers/    # Fact checking
+│   └── utils/            # Utility functions
+├── frontend/             # React frontend
+│   └── src/
+│       ├── components/   # UI components
+│       ├── pages/        # Page components
+│       └── services/     # API services
+├── vector_store/         # FAISS vector indices
+├── requirements.txt      # Python dependencies
+├── package.json          # Node.js dependencies
+└── docker-compose.yml    # Docker configuration
+```
+
+## Advanced Features
+
+### Knowledge Graph Generation
+
+The system automatically builds knowledge graphs showing relationships between concepts discovered during research.
+
+### RAG (Retrieval-Augmented Generation)
+
+- Semantic deduplication to avoid redundant information
+- Source weighting based on relevance and freshness
+- Hybrid search combining vector and keyword approaches
+
+### Citation Management
+
+All information is tracked with proper citations, making it easy to verify sources and follow up on specific topics.
+
+## API Integration
+
+The application supports multiple API integrations:
+
+- **Tavily**: For comprehensive web search
+- **Perplexity**: For AI-powered search results
+- **Ollama**: For local LLM inference
+- **LangSmith**: For monitoring and debugging (optional)
+
+## Development
+
+### Running Tests
+
+```bash
+# Backend tests
+pytest src/tests/
+
+# Frontend tests
+cd frontend
+npm test
+```
+
+### Code Quality
+
+```bash
+# Format code
+black src/
+ruff check src/
+
+# Type checking
+mypy src/
+```
+
+## Troubleshooting
+
+### Ollama Connection Issues
+
+If you can't connect to Ollama:
+1. Ensure Ollama is running: `ollama serve`
+2. Check the endpoint in `.env`: `OLLAMA_ENDPOINT=http://localhost:11434`
+3. Test the connection: `curl http://localhost:11434/api/tags`
+
+### API Key Issues
+
+- Get a Tavily API key at: https://tavily.com
+- Get a Perplexity API key at: https://www.perplexity.ai
+
+### Memory Issues
+
+For large research tasks, you may need to increase Docker memory limits in `docker-compose.yml`
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built with [LangGraph](https://github.com/langchain-ai/langgraph)
+- Powered by [Ollama](https://ollama.ai)
+- UI inspired by modern research tools
+- Vector storage by [FAISS](https://github.com/facebookresearch/faiss)
+
+## Support
+
+If you encounter any issues or have questions:
+- Open an issue on GitHub
+- Check the [documentation](./docs/)
+- Review existing issues and discussions
+
+## Roadmap
+
+- [ ] Multi-language support
+- [ ] PDF export of research reports
+- [ ] Custom research templates
+- [ ] Collaborative research features
+- [ ] Integration with more search engines
+- [ ] Advanced visualization options
+
+---
+
+**Note**: This project requires API keys for web search functionality. Make sure to configure your `.env` file properly before running.

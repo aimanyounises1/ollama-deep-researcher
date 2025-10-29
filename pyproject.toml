@@ -1,0 +1,98 @@
+[project]
+name = "ollama-deep-researcher"
+version = "0.1.0"
+description = "Lightweight web research and summarization assistant."
+authors = [
+    { name = "Lance Martin" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    "langgraph>=0.2.55",
+    "langchain-community>=0.3.9",
+    "tavily-python>=0.5.0",
+    "langchain-ollama>=0.2.1",
+    "duckduckgo-search>=7.3.0",
+    "beautifulsoup4>=4.13.3",
+    "pandas>=2.2.0",
+    "pypandoc>=1.13",
+    "jira>=3.5.2",
+    "openpyxl>=3.1.2",
+    "nest-asyncio>=1.6.0",
+    "sentence-transformers>=2.3.1",
+    "cachetools>=5.3.2",
+    "python-dotenv>=1.0.1",
+    "requests>=2.31.0",
+    "langsmith>=0.1.8",
+    "html2text>=2024.2.26",
+    "urllib3>=2.2.1",
+    "P4Python>=2023.2",
+    "langchain>=0.1.9",
+    "langchain-text-splitters>=0.0.1",
+    "langchain-cohere>=0.0.2",
+    "faiss-cpu>=1.7.4",
+    "typing-extensions>=4.9.0",
+    "tenacity>=8.2.3",
+    "textstat>=0.7.3",
+    "bs4>=0.0.2",
+    "certifi>=2024.2.2",
+    "pyOpenSSL>=24.0.0",
+    "cryptography>=42.0.2",
+    "aiohttp>=3.9.3",
+    "aiohttp-socks>=0.8.4",
+    "aiohttp-retry>=2.8.3",
+    "backoff>=2.2.1",
+    "networkx>=3.2.1",
+    "matplotlib>=3.8.2",
+    "PyYAML>=6.0.1",
+    "rich>=13.7.0",
+    "typer>=0.9.0",
+    "rank_bm25>=0.2.2",
+]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.11.1", "ruff>=0.6.1"]
+advanced = [
+    "PyPDF2>=3.0.1",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.2.0",
+]
+
+[build-system]
+requires = ["setuptools>=65.5.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["src", "src.assistant", "src.assistant.tools"]
+package-dir = {"src" = "src"}
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.ruff]
+lint.select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "D",    # pydocstyle
+    "D401", # First line should be in imperative mood
+    "T201",
+    "UP",
+]
+lint.ignore = [
+    "UP006",
+    "UP007",
+    "UP035",
+    "D417",
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "UP"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[project.scripts]
+ollama-researcher = "src.assistant.cli:main"
