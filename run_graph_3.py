@@ -86,7 +86,7 @@ else:
 # --- Pre-check DNS for critical internal services (Jira, Confluence) --------
 _internal_services_to_check = {
     "Jira": "deljira",
-    "Confluence (SolutionBook)": "solutionbook.amdocs.com"
+    "Confluence (SolutionBook)": ""
 }
 for service_name, service_host in _internal_services_to_check.items():
     try:
