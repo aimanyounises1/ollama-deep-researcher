@@ -40,8 +40,8 @@ except ModuleNotFoundError:
 from src.assistant.graph_3 import create_research_graph
 
 # Configure proxy settings
-os.environ["HTTP_PROXY"] = os.environ.get("HTTP_PROXY", "http://10.232.233.70:8080")
-os.environ["HTTPS_PROXY"] = os.environ.get("HTTPS_PROXY", "http://10.232.233.70:8080")
+os.environ["HTTP_PROXY"] = os.environ.get("HTTP_PROXY", "")
+os.environ["HTTPS_PROXY"] = os.environ.get("HTTPS_PROXY", "")
 
 # Disable SSL verification for internal development
 os.environ['CURL_CA_BUNDLE'] = ''
@@ -86,7 +86,7 @@ else:
 # --- Pre-check DNS for critical internal services (Jira, Confluence) --------
 _internal_services_to_check = {
     "Jira": "deljira",
-    "Confluence (SolutionBook)": "solutionbook.amdocs.com"
+    "Confluence (SolutionBook)": ""
 }
 for service_name, service_host in _internal_services_to_check.items():
     try:
