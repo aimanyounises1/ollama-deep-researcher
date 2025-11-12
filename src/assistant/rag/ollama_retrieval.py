@@ -129,17 +129,20 @@ class RAGRetriever:
     
     def _setup_proxy_environment(self):
         """Set up proxy environment variables if not already set."""
-        # Proxy configuration from environment or defaults
-        proxy_host = os.environ.get("PROXY_HOST", "")
+        # Proxy configuration from environment only (no defaults)
+        # Users should set PROXY_HOST and PROXY_PORT environment variables if needed
+        proxy_host = os.environ.get("PROXY_HOST")
         proxy_port = os.environ.get("PROXY_PORT")
-        
-        # Set up environment variables if not already set
-        if not os.environ.get("HTTP_PROXY"):
-            os.environ["HTTP_PROXY"] = f"http://{proxy_host}:{proxy_port}"
-        if not os.environ.get("HTTPS_PROXY"):
-            os.environ["HTTPS_PROXY"] = f"http://{proxy_host}:{proxy_port}"
-        
-        logger.info(f"Proxy settings: HTTP_PROXY={os.environ.get('HTTP_PROXY')}, HTTPS_PROXY={os.environ.get('HTTPS_PROXY')}")
+
+        # Set up environment variables only if proxy host is provided
+        if proxy_host and proxy_port:
+            if not os.environ.get("HTTP_PROXY"):
+                os.environ["HTTP_PROXY"] = f"http://{proxy_host}:{proxy_port}"
+            if not os.environ.get("HTTPS_PROXY"):
+                os.environ["HTTPS_PROXY"] = f"http://{proxy_host}:{proxy_port}"
+            logger.info(f"Proxy settings configured from environment variables")
+        else:
+            logger.debug("No proxy configuration found in environment variables")
     
     async def retrieve(self, query: str, max_docs: int = 5) -> List[str]:
         """
