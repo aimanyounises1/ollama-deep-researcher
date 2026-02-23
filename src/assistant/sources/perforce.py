@@ -662,52 +662,52 @@ async def main_async():
     try:
         helper = PerforceHelper()
         async with helper.async_session():
-            print("Connected to Perforce server (async context)")
+            logger.info("Connected to Perforce server (async context)")
             # --- Use relevant test query ---
             test_query = "MTV2005"  # Example keyword search
             # test_query = "27239429" # Example direct CL search
-            print(f"\nAsync searching for query: '{test_query}'...")
+            logger.info(f"Async searching for query: '{test_query}'...")
             # --- Call the main search function ---
             results = await search_perforce(test_query)
-            print(f"Found {len(results)} results for query '{test_query}'")
+            logger.info(f"Found {len(results)} results for query '{test_query}'")
 
             if results:
                 # --- Updated print logic to handle potentially enhanced results ---
                 for i, result_data in enumerate(results[:5]):  # Limit output for demo
                     if isinstance(result_data, dict):
                         cl = result_data.get('change')
-                        print("-" * 50)
-                        print(f"CL: {cl}")
-                        print(f"User: {result_data.get('user')}")
-                        print(f"Date: {result_data.get('dateFormatted')}")
-                        print(f"Description: {result_data.get('desc', '')[:200]}...")
+                        logger.debug("-" * 50)
+                        logger.info(f"CL: {cl}")
+                        logger.info(f"User: {result_data.get('user')}")
+                        logger.info(f"Date: {result_data.get('dateFormatted')}")
+                        logger.info(f"Description: {result_data.get('desc', '')[:200]}...")
                         if result_data.get('url'):
-                            print(f"Swarm Link: {result_data.get('url')}")
+                            logger.info(f"Swarm Link: {result_data.get('url')}")
 
                         files = result_data.get('files', [])
                         if files:
-                            print(f"Files ({len(files)}):")
+                            logger.info(f"Files ({len(files)}):")
                             for f_info in files[:3]:
-                                print(f"  - {f_info.get('path')} ({f_info.get('action')})")
+                                logger.info(f"  - {f_info.get('path')} ({f_info.get('action')})")
                             if len(files) > 3: print("    ...")
 
                         snippets = result_data.get('code_snippets')
                         if snippets:
-                            print("Code Snippets:")
+                            logger.info("Code Snippets:")
                             for snip_info in snippets[:2]:  # Show first 2 snippets per CL
-                                print(f"  File: {snip_info.get('file')}")
-                                print(f"  Language: {snip_info.get('language')}")
-                                print(f"  Action: {snip_info.get('action')}")
+                                logger.info(f"  File: {snip_info.get('file')}")
+                                logger.info(f"  Language: {snip_info.get('language')}")
+                                logger.info(f"  Action: {snip_info.get('action')}")
                                 snippet_text = snip_info.get('snippet', '')[:200]
-                                print(f"  ```\n{snippet_text}...\n  ```")
+                                logger.debug(f"  ```\n{snippet_text}...\n  ```")
                         else:
-                            print("  No code snippets found or extracted for this CL.")
-                        print("-" * 50)
+                            logger.debug("  No code snippets found or extracted for this CL.")
+                        logger.debug("-" * 50)
                     elif isinstance(result_data, str):  # Handle error string case
-                        print(f"Error in result: {result_data}")
+                        logger.warning(f"Error in result: {result_data}")
 
     except Exception as e:
-        print(f"Error in async main: {str(e)}")
+        logger.error(f"Error in async main: {str(e)}", exc_info=True)
         import traceback
         traceback.print_exc()
 
@@ -717,6 +717,6 @@ if __name__ == "__main__":
     try:
         asyncio.run(main_async())
     except KeyboardInterrupt:
-        print("Execution interrupted.")
+        logger.info("Execution interrupted.")
     finally:
-        print("Perforce tool script finished.")
+        logger.info("Perforce tool script finished.")
