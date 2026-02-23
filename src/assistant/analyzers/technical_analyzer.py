@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage
 from langchain_ollama import ChatOllama
 
-from src.assistant.state import ResearchState
+from src.assistant.core.types import ResearchState
 from src.assistant.configuration import Configuration
 from src.assistant.utils.helpers import traceable, clean_llm_output
 
@@ -55,7 +55,7 @@ async def validate_technical_aspects(state: ResearchState, config: Optional[Runn
         )
         
         # Get technical validation prompt from imported template
-        from src.utils.prompts import technical_validation_instructions
+        from src.assistant.prompts import technical_validation_instructions
         prompt = technical_validation_instructions
         
         # Prepare human message with content to validate
