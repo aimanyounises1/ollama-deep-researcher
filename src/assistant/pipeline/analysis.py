@@ -10,11 +10,11 @@ from typing import Dict, Any
 from langchain_core.runnables import RunnableConfig
 from langchain_ollama import ChatOllama
 from langsmith import traceable
-from src.utils.config import Configuration
-from .types import ResearchState
-from .core import should_process_next_confluence_chunk
-from .utils import clean_llm_output
-from .tools import tool_manager
+from src.assistant.configuration import Configuration
+from src.assistant.core.types import ResearchState
+from src.assistant.pipeline.nodes import should_process_next_confluence_chunk
+from src.assistant.utils.langgraph_helpers import clean_llm_output
+from src.assistant.pipeline.tools import tool_manager
 
 logger = logging.getLogger(__name__)
 
