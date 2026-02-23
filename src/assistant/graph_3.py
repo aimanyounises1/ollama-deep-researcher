@@ -25,16 +25,16 @@ from langgraph.constants import Send
 from langgraph.checkpoint.memory import InMemorySaver
 
 # Local imports - maintain compatibility with existing code structure
-from src.assistant.tools.PerforceTool import PerforceHelper
+from src.assistant.sources.perforce_client import PerforceHelper
 
 # Import modular components from our refactored structure
-from src.assistant.rag.retrieval import RAGRetriever
+from src.assistant.rag.ollama_retrieval import RAGRetriever
 from src.assistant.verifiers.fact_checker import FactChecker
 from src.assistant.verifiers.self_verification import SelfVerifier
 from src.assistant.verifiers.multi_agent_verification import MultiAgentVerifier
 from src.assistant.verifiers.chain_of_knowledge import ChainOfKnowledge
 from src.assistant.processors.chunk_processor import process_chunks
-from src.assistant.memory.knowledge_graph import TemporalKnowledgeGraph
+from src.assistant.knowledge.graph import TemporalKnowledgeGraph
 from src.assistant.analyzers.cross_source_analyzer import analyze_cross_sources, apply_cross_source_analysis
 from src.assistant.summarizers.map_rerank import MapRerankSummarizer
 from src.assistant.utils.langgraph_helpers import (
@@ -486,7 +486,7 @@ def create_research_graph() -> StateGraph:
             }
         
         try:
-            from src.assistant.tools.tool_jira import search_jira
+            from src.assistant.sources.jira_runner import search_jira
             from src.assistant.utils.response_formatter import sanitize_binary_content
             
             search_query = state.get("search_query", "")
@@ -602,7 +602,7 @@ def create_research_graph() -> StateGraph:
             }
         
         try:
-            from src.assistant.tools.tool_perforce import search_perforce
+            from src.assistant.sources.perforce import search_perforce
             from src.assistant.utils.response_formatter import sanitize_binary_content
             
             search_query = state.get("search_query", "")
@@ -709,7 +709,7 @@ def create_research_graph() -> StateGraph:
             }
         
         try:
-            from src.assistant.tools.tool_confluence import search_confluence
+            from src.assistant.sources.confluence import search_confluence
             from src.assistant.utils.response_formatter import sanitize_binary_content
             
             search_query = state.get("search_query", "")
