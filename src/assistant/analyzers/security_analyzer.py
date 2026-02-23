@@ -10,10 +10,11 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage
 from langchain_ollama import ChatOllama
 
-from src.assistant.state import ResearchState
+from src.assistant.core.types import ResearchState
 from src.assistant.configuration import Configuration
-from src.assistant.utils.helpers import traceable, clean_llm_output
-from src.assistant.tools.security_analyzer import SecurityAnalyzer
+from src.assistant.utils.helpers import traceable
+from src.assistant.utils.langgraph_helpers import clean_llm_output
+from src.assistant.sources.perforce_client import SecurityAnalyzer
 
 logger = logging.getLogger(__name__)
 
