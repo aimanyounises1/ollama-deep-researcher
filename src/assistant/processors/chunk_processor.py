@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from langchain_core.runnables import RunnableConfig
 
-from src.assistant.state import ResearchState
+from src.assistant.core.types import ResearchState
 
 logger = logging.getLogger(__name__)
 
