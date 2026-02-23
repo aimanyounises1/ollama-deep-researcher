@@ -14,7 +14,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage
 from langchain_ollama import ChatOllama
 
-from src.assistant.state import ResearchState
+from src.assistant.core.types import ResearchState
 from src.assistant.utils.langgraph_helpers import clean_llm_output, extract_identifiers, traceable
 
 logger = logging.getLogger(__name__)
