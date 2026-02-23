@@ -44,7 +44,7 @@ try:
 except ImportError as e:
     logging.warning(f"Could not import search dependencies: {e}")
 
-from .tools import tool_manager
+from src.assistant.pipeline.tools import tool_manager
 
 logger = logging.getLogger(__name__)
 
