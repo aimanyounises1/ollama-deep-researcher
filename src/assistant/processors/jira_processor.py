@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional, Set, Union
 
 from langchain_core.runnables import RunnableConfig
 
-from src.assistant.state import ResearchState
+from src.assistant.core.types import ResearchState
 from src.assistant.configuration import Configuration
 from src.assistant.utils.helpers import traceable, extract_identifiers
 
