@@ -74,7 +74,7 @@ async def analyze_security(state: ResearchState, config: Optional[RunnableConfig
             )
             
             # Get security prompt from imported template
-            from src.utils.prompts import security_analysis_instructions
+            from src.assistant.prompts import security_analysis_instructions
             prompt = security_analysis_instructions
             
             # Prepare human message with content to analyze
