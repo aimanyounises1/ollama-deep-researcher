@@ -26,37 +26,37 @@ class DummySearcher:
 
 # Import with fallbacks
 try:
-    from ..tools.SolutionBookTool import SolutionBookQuerier
+    from src.assistant.sources.solution_book import SolutionBookQuerier
 except ImportError:
     SolutionBookQuerier = DummySearcher
     
 try:
-    from ..tools.tool_perforce import search_perforce
+    from src.assistant.sources.perforce import search_perforce
 except ImportError:
     search_perforce = lambda query: []
     
 try:
-    from ..tools.tool_confluence import search_confluence
+    from src.assistant.sources.confluence import search_confluence
 except ImportError:
     search_confluence = lambda query: []
     
 try:
-    from ..tools.PerforceTool import PerforceHelper
+    from src.assistant.sources.perforce_client import PerforceHelper
 except ImportError:
     PerforceHelper = DummySearcher
     
 try:
-    from ..tools.jira_tool import JiraProject
+    from src.assistant.sources.jira_tool import JiraProject
 except ImportError:
     JiraProject = DummySearcher
     
 try:
-    from ..tools.security_analyzer import SecurityAnalyzer
+    from src.assistant.analyzers.security_analyzer import SecurityAnalyzer
 except ImportError:
     SecurityAnalyzer = DummySearcher
     
 try:
-    from ..tools.tool_jira import search_jira
+    from src.assistant.sources.jira_runner import search_jira
 except ImportError:
     search_jira = lambda query: []
 
