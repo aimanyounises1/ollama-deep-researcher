@@ -10,7 +10,7 @@ import os
 from typing import List, Tuple, Dict, Any
 from urllib3.exceptions import InsecureRequestWarning
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from src.utils.ssl_fix import with_ssl_disabled
+from src.assistant.utils.ssl_fix import with_ssl_disabled
 import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
