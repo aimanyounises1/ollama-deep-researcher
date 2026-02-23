@@ -82,7 +82,7 @@ except (ImportError, Exception) as e:
 
 # Import content cleaner utility
 try:
-    from src.utils.content_cleaner import clean_confluence_content
+    # clean_confluence_content is defined below in this module
 except ImportError:
     logging.getLogger(__name__).warning(
         "Failed to import clean_confluence_content utility. Cleaning will be basic."
