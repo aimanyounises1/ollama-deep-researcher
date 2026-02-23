@@ -12,8 +12,8 @@ import requests
 from langsmith import traceable
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from src.assistant.tools.PerforceTool import PerforceHelper  # Import the helper class
-from src.utils.ssl_fix import with_ssl_disabled, patch_ssl_for_huggingface
+from src.assistant.sources.perforce_client import PerforceHelper  # Import the helper class
+from src.assistant.utils.ssl_fix import with_ssl_disabled, patch_ssl_for_huggingface
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ async def search_perforce(query: str, extract_api_details: bool = False, max_res
     Returns:
         JSON string of changelist dictionaries with enhanced code context
     """
-    from src.assistant.tools.PerforceTool import PerforceHelper
+    from src.assistant.sources.perforce_client import PerforceHelper
     
     results = []
     
