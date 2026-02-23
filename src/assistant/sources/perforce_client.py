@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 # Import SecurityAnalyzer if it exists and is needed
 try:
-    from src.assistant.tools.security_analyzer import SecurityAnalyzer
+    from src.assistant.analyzers.security_analyzer import SecurityAnalyzer
 except ImportError:
     # Define a dummy class if SecurityAnalyzer is not found
     class SecurityAnalyzer:
