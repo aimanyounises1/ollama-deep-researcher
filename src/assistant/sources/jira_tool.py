@@ -27,7 +27,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 # --- END Enhancement ---
 
 # Import JIRA patch to fix session issue
-from src.assistant.tools.jira_patch import JIRA
+from src.assistant.sources.jira_patch import JIRA
 
 # Optional imports for advanced features
 try:
