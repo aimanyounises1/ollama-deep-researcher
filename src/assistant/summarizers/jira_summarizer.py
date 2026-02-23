@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage
 from langchain_ollama import ChatOllama
 
-from src.assistant.state import ResearchState
+from src.assistant.core.types import ResearchState
 from src.assistant.configuration import Configuration
 from src.assistant.utils.helpers import traceable, clean_llm_output
 
