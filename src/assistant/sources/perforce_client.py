@@ -2728,12 +2728,12 @@ async def main_async():
     try:
         helper = PerforceHelper()
         async with helper.async_session():  # Use the async context manager
-            print("Connected to Perforce server (async context)")
+            logger.info("Connected to Perforce server (async context)")
             test_mtv = "MTV2005"  # Example MTV
-            print(f"\nAsync searching for {test_mtv} changes (last 180 days)...")
+            logger.info(f"Async searching for {test_mtv} changes (last 180 days)...")
 
             changes = await helper.get_mtv_changes(test_mtv)
-            print(f"Found {len(changes)} changes for {test_mtv}")
+            logger.info(f"Found {len(changes)} changes for {test_mtv}")
 
             if changes:
                 # Fetch details and snippets concurrently
@@ -2752,43 +2752,43 @@ async def main_async():
 
                 for i, change in enumerate(changes[:5]):
                     cl = change.get('change')
-                    print("-" * 50)
-                    print(f"CL: {cl}")
+                    logger.debug("-" * 50)
+                    logger.info(f"CL: {cl}")
                     details = details_list[i] if i < len(details_list) and not isinstance(details_list[i],
                                                                                           Exception) else {}
-                    print(f"User: {details.get('user', change.get('user'))}")
+                    logger.info(f"User: {details.get('user', change.get('user'))}")
                     try:
                         time_str = datetime.fromtimestamp(int(details.get('time', change.get('time')))).strftime(
                             '%Y-%m-%d %H:%M:%S')
                     except:
                         time_str = "Unknown"
-                    print(f"Date: {time_str}")
-                    print(f"Description: {details.get('description', change.get('desc'))[:200]}...")
+                    logger.info(f"Date: {time_str}")
+                    logger.info(f"Description: {details.get('description', change.get('desc'))[:200]}...")
 
                     # Swarm Link
                     if helper.p4_swarm_url and cl and cl.isdigit():
-                        print(f"Swarm Link: {helper.p4_swarm_url}/changes/{cl}")
+                        logger.info(f"Swarm Link: {helper.p4_swarm_url}/changes/{cl}")
 
                     # Print Files
                     files = details.get('files', [])
                     if files:
-                        print(f"Files ({len(files)}):")
+                        logger.info(f"Files ({len(files)}):")
                         for f_info in files[:3]:  # Show first 3 files
-                            print(f"  - {f_info.get('depotFile')} ({f_info.get('action')})")
+                            logger.info(f"  - {f_info.get('depotFile')} ({f_info.get('action')})")
                         if len(files) > 3: print("    ...")
 
                     # Print Snippets (Placeholder)
                     snippets = snippets_list[i] if i < len(snippets_list) and not isinstance(snippets_list[i],
                                                                                              Exception) else []
                     if snippets:
-                        print("Code Snippets:")
+                        logger.info("Code Snippets:")
                         for snip in snippets:
-                            print(f"  File: {snip.get('file')}")
-                            print(f"  ```\n{snip.get('snippet')[:200]}...\n  ```")  # Show limited snippet
-                    print("-" * 50)
+                            logger.info(f"  File: {snip.get('file')}")
+                            logger.debug(f"  ```\n{snip.get('snippet')[:200]}...\n  ```")  # Show limited snippet
+                    logger.debug("-" * 50)
 
     except Exception as e:
-        print(f"Error in async main: {str(e)}")
+        logger.error(f"Error in async main: {str(e)}", exc_info=True)
         import traceback
         traceback.print_exc()
 
@@ -2798,6 +2798,6 @@ if __name__ == "__main__":
     try:
         asyncio.run(main_async())
     except KeyboardInterrupt:
-        print("Execution interrupted.")
+        logger.info("Execution interrupted.")
     finally:
-        print("Perforce tool script finished.")
+        logger.info("Perforce tool script finished.")
