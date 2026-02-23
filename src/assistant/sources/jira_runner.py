@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional, Union
 from dotenv import load_dotenv
 from langchain.agents import Tool
 
-from src.assistant.tools.jira_tool import JiraProject, ConfigurationError
+from src.assistant.sources.jira_tool import JiraProject, ConfigurationError
 from src.assistant.utils.response_formatter import format_tool_response, format_error_response
 
 logger = logging.getLogger(__name__)
