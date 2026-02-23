@@ -13,7 +13,7 @@ import requests
 from dotenv import load_dotenv
 from langchain.agents import Tool
 
-from src.assistant.tools.SolutionBookTool import SolutionBookQuerier
+from src.assistant.sources.solution_book import SolutionBookQuerier
 from src.utils.content_cleaner import clean_confluence_content
 from src.utils import proxy_helper
 from src.assistant.utils.response_formatter import format_tool_response, format_error_response
